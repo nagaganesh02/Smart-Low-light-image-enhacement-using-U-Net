@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Low-Light Image Enhancement</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }
+        h1 { text-align: center; color: #333; }
+        h3 { text-align: center; color: #555; }
+        .container { display: flex; max-width: 1200px; margin: auto; }
+        .sidebar { width: 300px; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-right: 20px; }
+        .main-content { flex-grow: 1; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .image-container { display: flex; justify-content: space-between; }
+        .image-box { width: 48%; text-align: center; }
+        img { max-width: 100%; height: auto; border-radius: 8px; }
+        input[type="file"], button { margin: 10px 0; padding: 10px; width: 100%; }
+        .slider { width: 100%; margin: 10px 0; }
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        video, canvas { display: none; }
+        .radio-group { margin: 20px 0; }
+        .download-btn { display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px; }
+        .download-btn:hover { background-color: #218838; }
+        .footer { margin-top: 20px; text-align: center; color: #777; }
+    </style>
+</head>
+<body>
+    <h1>🌙✨ Low-Light Image Enhancement</h1>
+    <h3>Upload an image or capture from your webcam!</h3>
+    <div class="container">
+        <div class="sidebar">
+            <h2> Ascent; font-weight: bold;">🔧 Enhancement Controls</h2>
+            <form method="POST" enctype="multipart/form-data" id="enhance-form">
+                <div class="radio-group">
+                    <label><input type="radio" name="input_method" value="upload" checked> Upload Image</label>
+                    <label><input type="radio" name="input_method" value="webcam"> Use Webcam</label>
+                </div>
+                <input type="file" name="image" id="image-upload" accept="image/*" style="display: none;">
+                <label for="gamma">Gamma Correction</label>
+                <input type="range" class="slider" name="gamma" min="0.5" max="3.0" step="0.1" value="1.8">
+                <label for="clip_limit">CLAHE Clip Limit</label>
+                <input type="range" class="slider" name="clip_limit" min="1.0" max="5.0" step="0.1" value="3.0">
+                <label for="grid_size">CLAHE Grid Size</label>
+                <input type="range" class="slider" name="grid_size" min="4" max="16" step="2" value="8">
+                <label for="brightness">Brightness</label>
+                <input type="range" class="slider" name="brightness" min="0.5" max="2.0" step="0.1" value="1.0">
+                <label for="contrast">Contrast</label>
+                <input type="range" class="slider" name="contrast" min="0.5" max="2.0" step="0.1" value="1.0">
+                <label for="saturation">Saturation</label>
+                <input type="range" class="slider" name="saturation" min="0.5" max="2.0" step="0.1" value="1.0">
+                <label for="sharpness">Sharpness</label>
+                <input type="range" class="slider" name="sharpness" min="0.5" max="2.0" step="0.1" value="1.0">
+                <button type="submit">Enhance Image</button>
+                <input type="hidden" name="webcam_image" id="webcam_image">
+            </form>
+        </div>
+        <div class="main-content">
+            <div class="image-container">
+                <div class="image-box">
+                    <h3>📷 Original Image</h3>
+                    {% if original_image %}
+                        <img src="{{ original_image }}" alt="Original Image">
+                    {% endif %}
+                </div>
+                <div class="image-box">
+                    <h3>✨ Enhanced Image</h3>
+                    {% if enhanced_image %}
+                        <img src="{{ enhanced_image }}" alt="Enhanced Image">
+                        {% if temp_filename %}
+                            <a href="{{ url_for('download', filename=temp_filename) }}" class="download-btn">📥 Download Enhanced Image</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <hr>
+        <p>Developed by <b>Your Name</b></p>
+    </div>
+
+    <video id="video" width="320" height="240" autoplay></video>
+    <canvas id="canvas" width="320" height="240"></canvas>
+
+    <script>
+        const uploadInput = document.getElementById('image-upload');
+        const webcamRadio = document.querySelector('input[value="webcam"]');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const webcamImageInput = document.getElementById('webcam_image');
+        const form = document.getElementById('enhance-form');
+
+        webcamRadio.addEventListener('change', () => {
+            if (webcamRadio.checked) {
+                uploadInput.style.display = 'none';
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => {
+                        video.srcObject = stream;
+                        video.style.display = 'block';
+                    })
+                    .catch(err => console.error('Webcam error:', err));
+            } else {
+                video.style.display = 'none';
+                uploadInput.style.display = 'block';
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                }
+            }
+        });
+
+        form.addEventListener('submit', (e) => {
+            if (webcamRadio.checked) {
+                canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                webcamImageInput.value = canvas.toDataURL('image/png');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+streamlit==1.33.0
+opencv-python==4.9.0.80
+numpy==1.24.4
+Pillow==9.5.0
+torch==2.1.0
+torchvision==0.16.0
+matplotlib==3.7.1
+rawpy==0.18.1
+piexif==1.1.3
